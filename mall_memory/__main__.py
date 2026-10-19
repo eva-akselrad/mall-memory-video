@@ -20,14 +20,12 @@ def main(argv: list[str] | None = None) -> int:
         "--images",
         "-i",
         type=Path,
-        required=True,
         help="Folder containing your mall photos (jpg, png, webp, …)",
     )
     parser.add_argument(
         "--music",
         "-m",
         type=Path,
-        required=True,
         help="Background music track (mp3, wav, m4a, …)",
     )
     parser.add_argument(
@@ -80,8 +78,23 @@ def main(argv: list[str] | None = None) -> int:
         help="Override preset crossfade duration in seconds",
     )
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
+    parser.add_argument(
+        "--gui",
+        action="store_true",
+        help="Open the desktop UI instead of running from the command line",
+    )
 
     args = parser.parse_args(argv)
+
+    launch_gui = args.gui or (argv is None and len(sys.argv) == 1)
+    if launch_gui:
+        from mall_memory.gui import run
+
+        run()
+        return 0
+
+    if args.images is None or args.music is None:
+        parser.error("the following arguments are required: --images/-i, --music/-m (or use --gui)")
 
     try:
         out = build_video(

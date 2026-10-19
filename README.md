@@ -18,7 +18,21 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-## Usage
+## Desktop UI
+
+```bash
+python -m mall_memory
+```
+
+Or explicitly:
+
+```bash
+python -m mall_memory --gui
+```
+
+Pick your photo folder, music file, style preset, and click **Generate video**. Rendering runs in the background with a progress bar.
+
+## Command line
 
 ```bash
 python -m mall_memory ^
@@ -39,9 +53,21 @@ python -m mall_memory ^
 | `--width` / `--height` | 1920×1080 | Export resolution |
 | `--fps` | 24 | Frame rate |
 
-### Music tips (Proper People vibe)
+### Music
 
-Their edits lean **instrumental ambient**, sparse piano, or light electronic — not loud EDM. Use tracks from Musicbed, Artlist, or your own library. This tool does **not** download or bundle copyrighted music.
+See **[docs/MUSIC.md](docs/MUSIC.md)** for:
+
+- **Built-in demo track** (`assets/demo-mall-ambient.mp3`) — synthetic ambient, free to use
+- **Free Pixabay** documentary picks
+- **Suno prompts** tuned for Proper People–style mall slideshows
+
+Quick demo:
+
+```bash
+python -m mall_memory.demo_music
+```
+
+In the UI: **Use demo music** (or **Generate demo track** if the file is missing).
 
 ## What it does
 
