@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.env.*
+*.mp4
+*.mov
+*.wav
+output/
+test_data/
+.DS_Store
+Thumbs.db
+.pytest_cache/
+*.egg-info/
+dist/
+build/
