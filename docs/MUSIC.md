@@ -18,9 +18,41 @@ python -m mall_memory.demo_music --seconds 300 -o assets/demo-mall-ambient.mp3
 
 ---
 
-## Free downloads (documentary / ambient)
+## Recommended artist: Obras Ocultas
 
-Pixabay tracks work well under their [Content License](https://pixabay.com/service/license/) (check current terms for your use case):
+Documentary urbex channels (including [The Proper People](https://www.youtube.com/@TheProperPeople)) often use atmospheric beds from **[Obras Ocultas](https://soundcloud.com/obras-ocultas)** — a composer from Buenos Aires (*ambientaciones musicales*). This is the closest match to that slow, cinematic mall-exploration feel.
+
+**Where to listen**
+
+- SoundCloud: https://soundcloud.com/obras-ocultas  
+- YouTube: https://www.youtube.com/channel/UClcMRCkDW0H9OWkpV-nwHkg  
+- Spotify: search **Obras Ocultas** (e.g. *Recuerdos Sepia*, *New Paradise*, *Urbex 17*)
+
+Download or purchase tracks only in ways the artist allows. If you plan to **upload your video** (YouTube, etc.), **ask Obras Ocultas for permission** or use a license they provide — same courtesy [The Proper People](https://soundcloud.com/theproperpeople) request when reusing music from their channel.
+
+---
+
+## Which track for which photos
+
+Pick one album-style bed and let it run; the app **loops** the track if your slideshow is longer than the song.
+
+| Slideshow vibe | Suggested Obras Ocultas tracks | Why |
+|----------------|-------------------------------|-----|
+| General mall memory / mixed photos | **Urbex Utopy**, **Nostalgia**, **Recuerdos Sepia** | Bittersweet exploration, sepia memory, works for most sets |
+| Food court, skylights, wide shots | **Through glass**, **Alaska** | Reflective, airy, sense of scale |
+| Empty corridors, liminal halls | **Limbo**, **New paradise** | Suspended, quiet, between worlds |
+| Neon on, power still running, night interior | **Intriga y suspenso** | Slow tension without horror jumps |
+| More emotional / personal nostalgia | **If the love was colors**, **Nostalgia** | Warmer, more melodic |
+
+Start with **Urbex Utopy** or **Through glass** if you are unsure — they sit right in the Proper People documentary pocket.
+
+**In the app:** export or save the track as MP3/WAV, then choose it under **Music track** (or `--music` on the command line).
+
+---
+
+## Royalty-free alternatives
+
+If you need music you can use without asking the artist, Pixabay documentary ambient tracks are a safe fallback under their [Content License](https://pixabay.com/service/license/) (read current terms for your use):
 
 | Track | Vibe | Link |
 |-------|------|------|
@@ -28,70 +60,4 @@ Pixabay tracks work well under their [Content License](https://pixabay.com/servi
 | Documentary_Tidal | Piano + atmosphere, cinematic | https://pixabay.com/music/ambient-documentary-tidal-11052/ |
 | Mystery Atmosphere Ambient Documentary | Quiet, slightly eerie | https://pixabay.com/music/solo-piano-mystery-atmosphere-ambient-documentary-380714/ |
 
-Browse more: https://pixabay.com/music/search/documentary%20ambient/
-
----
-
-## Reference artist: Obras Ocultas
-
-A lot of **Proper People**–style urbex edits use atmospheric beds from **[Obras Ocultas](https://soundcloud.com/obras-ocultas)** (Buenos Aires — *ambientaciones musicales*). Listen before you prompt Suno so you match the **mood**, not a random “creepy” drone:
-
-| Track | Use it as a mood reference for… |
-|-------|----------------------------------|
-| [Urbex Utopy](https://soundcloud.com/obras-ocultas) | Empty buildings, exploration B-roll, hopeful melancholy |
-| [Through glass](https://soundcloud.com/obras-ocultas) | Looking into closed spaces, reflective, glass/skylight light |
-| [Limbo](https://soundcloud.com/obras-ocultas) | Liminal corridors, suspended time |
-| [Nostalgia](https://soundcloud.com/obras-ocultas) | Sepia memory, old retail, bittersweet |
-| [Alaska](https://soundcloud.com/obras-ocultas) | Cold wide pads, distant, cinematic (fans often cite this family of sound) |
-| [Intriga y suspenso](https://soundcloud.com/obras-ocultas) | Tension without jump-scares — slow reveal |
-| [Recuerdos Sepia](https://open.spotify.com/search/Recuerdos%20Sepia%20Obras%20Ocultas) | Warm faded memory, documentary piano |
-
-**Using the real tracks:** SoundCloud is usually **personal listening** unless the artist licenses you. [The Proper People](https://soundcloud.com/theproperpeople) ask you to **contact them** before reusing music from their channel; same idea applies if you want an Obras Ocultas piece on **YouTube**. For your slideshow, **Suno in this vein** or **Pixabay** keeps you clear; or message the artist for permission.
-
-YouTube: [Obras Ocultas channel](https://www.youtube.com/channel/UClcMRCkDW0H9OWkpV-nwHkg)
-
----
-
-## Suno prompts (Obras Ocultas–inspired)
-
-Use **Instrumental** / **No vocals**. Aim for **2–4 minutes**; the app loops the track if your slideshow runs longer.
-
-**Style tags to paste at the end of any prompt:** `cinematic ambient, urbex documentary underscore, Buenos Aires film score feel, wide reverb, no drums, no vocals, fade-friendly intro and outro`
-
-### 1 — Urbex Utopy (mall walk — start here)
-
-```text
-Instrumental cinematic ambient underscore for urban exploration documentary. Slow evolving synth pads and soft piano, emotional but restrained, sense of wonder in abandoned architecture. 68 BPM, major-minor bittersweet harmony, long hall reverb, subtle low pulse not a beat. Empty 1980s shopping mall at dusk, skylights, tile echoes. In the spirit of Obras Ocultas "Urbex Utopy" — not horror, not EDM. Wide stereo, gentle dynamics, no percussion, no vocals.
-```
-
-### 2 — Through glass (food court / storefronts)
-
-```text
-Instrumental ambient, looking through dirty glass into dead mall stores. Delicate piano motif, glassy synth textures, light arpeggios like reflections. Melancholy documentary, 62 BPM, lots of space between notes, reverb tail 4+ seconds. Obras Ocultas "Through glass" mood — contemplative, cinematic, no drums, no choir, no vocals.
-```
-
-### 3 — Limbo + Nostalgia (sepia slideshow)
-
-```text
-Sepia nostalgia instrumental, slow tape-warm pad, muted piano chords, faint analog hiss acceptable. Memory of childhood mall, faded photos, gentle sadness not scary. 58 BPM, minimal melody that repeats and evolves slowly. Obras Ocultas "Limbo" and "Nostalgia" — documentary preservation film, no beats, no vocals.
-```
-
-### 4 — Intriga y suspenso (power still on / neon hum)
-
-```text
-Suspense ambient for exploration video, slow tension rise without jump scares. Low drone, distant fluorescent buzz texture, sparse piano stabs far apart, minor key. 70 BPM feel but no drum kit — only pulse. Abandoned mall with lights still humming. Obras Ocultas "Intriga y suspenso" — cinematic, dark but controlled, no vocals, no trailer hits.
-```
-
-### 5 — Alaska (wide cold atrium)
-
-```text
-Cold wide cinematic ambient, large empty atrium, airy pads, slow string-like synth swells, very minimal piano. Isolated, vast, blue-hour light. 64 BPM, film documentary underscore, Obras Ocultas "Alaska" energy — ethereal, no percussion, no vocals, smooth ending for crossfade.
-```
-
-### Suno tips
-
-- In **Style of** / description, add: `Obras Ocultas, urbex ambient, documentary underscore` (Suno may not know the name — the paragraphs above matter more).
-- If it gets **too horror**: `less dissonance, more melancholy, Proper People documentary not horror film`.
-- If it gets **too upbeat**: `even slower, remove drums, more reverb, less melody`.
-- Add: `seamless loop friendly`, `mix -14 LUFS feel`.
-- Export WAV or MP3 from Suno and point the app at that file.
+Browse: https://pixabay.com/music/search/documentary%20ambient/

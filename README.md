@@ -59,7 +59,7 @@ See **[docs/MUSIC.md](docs/MUSIC.md)** for:
 
 - **Built-in demo track** (`assets/demo-mall-ambient.mp3`) — synthetic ambient, free to use
 - **Free Pixabay** documentary picks
-- **Suno prompts** tuned to [Obras Ocultas](https://soundcloud.com/obras-ocultas) / Proper People–style urbex ambient
+- **[Obras Ocultas](https://soundcloud.com/obras-ocultas)** track picks for Proper People–style urbex ambient
 
 Quick demo:
 
