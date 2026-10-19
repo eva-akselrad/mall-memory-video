@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import sys
 from pathlib import Path
 
 from mall_memory import __version__
 from mall_memory.effects import PRESETS
+from mall_memory.log_config import get_logger, setup_logging
 from mall_memory.render import build_video
+
+log = get_logger("cli")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -26,7 +30,7 @@ def main(argv: list[str] | None = None) -> int:
         "--music",
         "-m",
         type=Path,
-        help="Background music track (mp3, wav, m4a, …)",
+        help="Music file or folder of tracks (plays in order; loops playlist if slideshow is longer)",
     )
     parser.add_argument(
         "--output",
@@ -83,6 +87,18 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Open the desktop UI instead of running from the command line",
     )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Verbose logging (DEBUG)",
+    )
+    parser.add_argument(
+        "--log-file",
+        type=Path,
+        default=None,
+        help="Also write logs to this file",
+    )
 
     args = parser.parse_args(argv)
 
@@ -90,8 +106,11 @@ def main(argv: list[str] | None = None) -> int:
     if launch_gui:
         from mall_memory.gui import run
 
-        run()
+        run(verbose=args.verbose, log_file=args.log_file)
         return 0
+
+    level = logging.DEBUG if args.verbose else logging.INFO
+    setup_logging(level=level, log_file=args.log_file)
 
     if args.images is None or args.music is None:
         parser.error("the following arguments are required: --images/-i, --music/-m (or use --gui)")
@@ -110,10 +129,10 @@ def main(argv: list[str] | None = None) -> int:
             crossfade_seconds=args.crossfade,
         )
     except (FileNotFoundError, ValueError) as exc:
-        print(f"Error: {exc}", file=sys.stderr)
+        log.error("%s", exc)
         return 1
 
-    print(f"Wrote {out}")
+    log.info("Wrote %s", out)
     return 0
 
 

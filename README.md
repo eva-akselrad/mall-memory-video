@@ -30,7 +30,14 @@ Or explicitly:
 python -m mall_memory --gui
 ```
 
-Pick your photo folder, music file, style preset, and click **Generate video**. Rendering runs in the background with a progress bar.
+Pick your photo folder, music file, style preset, and click **Generate video**. Rendering runs in the background with a progress bar and a **Log** panel.
+
+CLI logging (stderr):
+
+```bash
+python -m mall_memory -i photos -m music-folder -o out.mp4 -v
+python -m mall_memory ... --log-file output/render.log
+```
 
 ## Command line
 
@@ -75,7 +82,7 @@ In the UI: **Use demo music** (or **Generate demo track** if the file is missing
 2. Applies a subtle **Ken Burns** pan/zoom on each shot
 3. **Crossfades** between photos
 4. Adds a light **film grade** (desaturation, vignette, grain)
-5. Mixes your **music** with fade-in/out and loops the track if the slideshow runs longer
+5. Mixes your **music** (one file or a **folder** of tracks played in order) with fade-in/out; repeats the playlist if the slideshow runs longer
 
 ## License
 

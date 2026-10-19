@@ -5,7 +5,7 @@ from pathlib import Path
 
 import numpy as np
 from proglog import ProgressBarLogger
-from moviepy import AudioFileClip, VideoClip, concatenate_videoclips
+from moviepy import AudioFileClip, VideoClip, concatenate_audioclips, concatenate_videoclips
 from moviepy.audio.fx import AudioFadeIn, AudioFadeOut
 from moviepy.video.fx import CrossFadeIn
 
@@ -17,6 +17,10 @@ from mall_memory.effects import (
     load_image_rgb,
 )
 from mall_memory.images import discover_images
+from mall_memory.log_config import get_logger
+from mall_memory.music import resolve_music_paths
+
+log = get_logger("render")
 
 ProgressCallback = Callable[[str, float], None]
 
@@ -41,6 +45,7 @@ def build_video(
     *,
     style: str = "proper-people",
     sort: str = "name",
+    music_sort: str = "name",
     width: int = 1920,
     height: int = 1080,
     fps: int = 24,
@@ -48,9 +53,25 @@ def build_video(
     crossfade_seconds: float | None = None,
     on_progress: ProgressCallback | None = None,
 ) -> Path:
+    last_phase = ""
+
     def progress(phase: str, amount: float) -> None:
+        nonlocal last_phase
+        if phase != last_phase:
+            log.info("Phase: %s (%d%%)", phase, int(min(1.0, max(0.0, amount)) * 100))
+            last_phase = phase
         if on_progress:
             on_progress(phase, min(1.0, max(0.0, amount)))
+
+    log.info(
+        "Starting export → %s (%dx%d @ %d fps, style=%s)",
+        output_path,
+        width,
+        height,
+        fps,
+        style,
+    )
+    log.info("Images: %s | Music: %s", images_dir, music_path)
 
     preset = PRESETS.get(style, PRESETS["proper-people"])
     duration = seconds_per_image if seconds_per_image is not None else preset.seconds_per_image
@@ -58,9 +79,17 @@ def build_video(
 
     progress("loading", 0.02)
     image_paths = discover_images(images_dir, sort=sort)
+    log.info(
+        "Found %d photos (sort=%s, %.2fs each, %.2fs crossfade)",
+        len(image_paths),
+        sort,
+        duration,
+        crossfade,
+    )
     clips: list[VideoClip] = []
 
     for index, path in enumerate(image_paths):
+        log.info("Slide %d/%d: %s", index + 1, len(image_paths), path.name)
         progress("slides", 0.05 + 0.55 * (index / max(1, len(image_paths))))
         base = load_image_rgb(path)
         seed = index * 131 + hash(path.name) % 10_000
@@ -76,7 +105,7 @@ def build_video(
                 seed,
             )
             frame_index = int(t * fps) + idx * 10_000
-            return apply_grade(
+            graded = apply_grade(
                 frame,
                 preset.saturation,
                 preset.warmth,
@@ -85,6 +114,8 @@ def build_video(
                 preset.grain,
                 frame_index,
             )
+            # MoviePy expects uint8 RGB (0–255); float 0–1 encodes as black.
+            return (np.clip(graded, 0.0, 1.0) * 255).astype(np.uint8)
 
         clip = VideoClip(make_frame, duration=duration).with_fps(fps)
         if index > 0 and crossfade > 0:
@@ -92,12 +123,15 @@ def build_video(
         clips.append(clip)
 
     progress("slides", 0.62)
+    log.info("Concatenating %d clips", len(clips))
     video = concatenate_videoclips(clips, method="compose", padding=-crossfade)
+    log.info("Video timeline: %.2fs", video.duration)
     progress("audio", 0.68)
-    audio = _prepare_audio(music_path, video.duration)
+    audio = _prepare_audio(music_path, video.duration, sort=music_sort)
     final = video.with_audio(audio)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    log.info("Encoding H.264/AAC → %s", output_path)
     encode_logger = _EncodeProgressLogger(
         lambda frac: progress("encoding", 0.7 + 0.3 * frac)
     )
@@ -112,6 +146,7 @@ def build_video(
         logger=encode_logger,
     )
     progress("done", 1.0)
+    log.info("Finished: %s (%.2fs)", output_path, video.duration)
 
     video.close()
     audio.close()
@@ -122,18 +157,41 @@ def build_video(
     return output_path
 
 
-def _prepare_audio(music_path: Path, video_duration: float) -> AudioFileClip:
-    if not music_path.is_file():
-        raise FileNotFoundError(f"Music file not found: {music_path}")
+def _prepare_audio(music_source: Path, video_duration: float, *, sort: str = "name") -> AudioFileClip:
+    track_paths = resolve_music_paths(music_source, sort=sort)
+    if music_source.is_dir():
+        log.info("Music folder: %d track(s) (sort=%s)", len(track_paths), sort)
+    else:
+        log.info("Music file: %s", track_paths[0].name)
 
-    audio = AudioFileClip(str(music_path))
+    parts: list[AudioFileClip] = []
+    total = 0.0
+    playlist_pass = 0
+
+    # Play tracks in order; repeat the playlist if the slideshow runs longer.
+    while total < video_duration:
+        playlist_pass += 1
+        if playlist_pass > 1:
+            log.info("Playlist pass %d (audio %.1fs / video %.1fs)", playlist_pass, total, video_duration)
+        progressed = False
+        for path in track_paths:
+            clip = AudioFileClip(str(path))
+            parts.append(clip)
+            log.info("  + %s (%.1fs)", path.name, clip.duration)
+            total += clip.duration
+            progressed = True
+            if total >= video_duration:
+                break
+        if not progressed:
+            break
+
+    if not parts:
+        raise ValueError(f"No playable audio at: {music_source}")
+
+    log.info("Audio timeline: %.2fs for %.2fs video", total, video_duration)
+    audio = concatenate_audioclips(parts)
     if audio.duration > video_duration:
         audio = audio.subclipped(0, video_duration)
-    elif audio.duration < video_duration:
-        loops = int(np.ceil(video_duration / audio.duration))
-        from moviepy import concatenate_audioclips
-
-        audio = concatenate_audioclips([audio] * loops).subclipped(0, video_duration)
 
     fade_in = min(2.5, video_duration * 0.08)
     fade_out = min(4.0, video_duration * 0.12)

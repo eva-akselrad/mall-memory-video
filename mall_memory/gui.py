@@ -1,18 +1,23 @@
 from __future__ import annotations
 
+import logging
 import os
 import subprocess
 import sys
 import threading
 import tkinter as tk
 from pathlib import Path
-from tkinter import filedialog, messagebox, ttk
+from tkinter import filedialog, messagebox, scrolledtext, ttk
 
 from mall_memory import __version__
 from mall_memory.demo_music import bundled_demo_path, generate_mp3
 from mall_memory.effects import PRESETS
 from mall_memory.images import discover_images
+from mall_memory.log_config import get_logger, setup_logging
+from mall_memory.music import resolve_music_paths
 from mall_memory.render import build_video
+
+log = get_logger("gui")
 
 PHASE_LABELS = {
     "loading": "Loading photos…",
@@ -27,8 +32,8 @@ class MallMemoryApp(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
         self.title(f"Mall Memory Video · v{__version__}")
-        self.minsize(560, 520)
-        self.geometry("640x580")
+        self.minsize(560, 640)
+        self.geometry("680x720")
         self.configure(bg="#14161c")
 
         self._images_dir = tk.StringVar()
@@ -39,8 +44,9 @@ class MallMemoryApp(tk.Tk):
         self._use_custom_timing = tk.BooleanVar(value=False)
         self._seconds = tk.DoubleVar(value=PRESETS["proper-people"].seconds_per_image)
         self._crossfade = tk.DoubleVar(value=PRESETS["proper-people"].crossfade_seconds)
-        self._status = tk.StringVar(value="Pick your mall photos and a music track.")
+        self._status = tk.StringVar(value="Pick your mall photos and music (file or folder).")
         self._photo_count = tk.StringVar(value="")
+        self._music_count = tk.StringVar(value="")
         self._busy = False
 
         self._build_styles()
@@ -92,16 +98,26 @@ class MallMemoryApp(tk.Tk):
         ttk.Label(card, textvariable=self._photo_count, style="Muted.TLabel").grid(
             row=1, column=1, sticky=tk.W, pady=(0, 8)
         )
-        self._row_path(card, "Music track", self._music_path, self._pick_music, 2)
+        ttk.Label(card, text="Music", style="Card.TLabel").grid(row=2, column=0, sticky=tk.W, pady=4)
+        ttk.Entry(card, textvariable=self._music_path, width=48).grid(
+            row=2, column=1, sticky=tk.EW, padx=(8, 8), pady=4
+        )
+        music_browse = ttk.Frame(card, style="Card.TFrame")
+        music_browse.grid(row=2, column=2, pady=4)
+        ttk.Button(music_browse, text="File…", command=self._pick_music_file).pack(side=tk.TOP, pady=(0, 4))
+        ttk.Button(music_browse, text="Folder…", command=self._pick_music_folder).pack(side=tk.TOP)
+        ttk.Label(card, textvariable=self._music_count, style="Muted.TLabel").grid(
+            row=3, column=1, sticky=tk.W, pady=(0, 8)
+        )
         music_actions = ttk.Frame(card, style="Card.TFrame")
-        music_actions.grid(row=3, column=1, columnspan=2, sticky=tk.W, pady=(0, 8))
+        music_actions.grid(row=4, column=1, columnspan=2, sticky=tk.W, pady=(0, 8))
         ttk.Button(music_actions, text="Use demo music", command=self._use_demo_music).pack(
             side=tk.LEFT, padx=(0, 8)
         )
         ttk.Button(music_actions, text="Generate demo track", command=self._generate_demo_music).pack(
             side=tk.LEFT
         )
-        self._row_path(card, "Save video as", self._output_path, self._pick_output, 4)
+        self._row_path(card, "Save video as", self._output_path, self._pick_output, 5)
 
         opts = ttk.Frame(card, style="Card.TFrame")
         opts.grid(row=6, column=0, columnspan=3, sticky=tk.EW, pady=(8, 0))
@@ -154,6 +170,20 @@ class MallMemoryApp(tk.Tk):
 
         ttk.Label(outer, textvariable=self._status, style="Muted.TLabel").pack(anchor=tk.W)
 
+        log_frame = ttk.LabelFrame(outer, text="Log", padding=4)
+        log_frame.pack(fill=tk.BOTH, expand=True, pady=(10, 0))
+        self._log_text = scrolledtext.ScrolledText(
+            log_frame,
+            height=8,
+            wrap=tk.WORD,
+            state=tk.DISABLED,
+            font=("Consolas", 9),
+            bg="#0f1115",
+            fg="#c8cdd5",
+            insertbackground="#c8cdd5",
+        )
+        self._log_text.pack(fill=tk.BOTH, expand=True)
+
         actions = ttk.Frame(outer)
         actions.pack(fill=tk.X, pady=(16, 0))
         self._generate_btn = ttk.Button(
@@ -179,13 +209,24 @@ class MallMemoryApp(tk.Tk):
         ttk.Button(parent, text="Browse…", command=command).grid(row=row, column=2, pady=4)
         parent.columnconfigure(1, weight=1)
 
+    def _append_log(self, line: str) -> None:
+        self._log_text.configure(state=tk.NORMAL)
+        self._log_text.insert(tk.END, line + "\n")
+        self._log_text.see(tk.END)
+        self._log_text.configure(state=tk.DISABLED)
+
+    def _clear_log(self) -> None:
+        self._log_text.configure(state=tk.NORMAL)
+        self._log_text.delete("1.0", tk.END)
+        self._log_text.configure(state=tk.DISABLED)
+
     def _pick_images(self) -> None:
         path = filedialog.askdirectory(title="Select mall photos folder")
         if path:
             self._images_dir.set(path)
             self._refresh_photo_count()
 
-    def _pick_music(self) -> None:
+    def _pick_music_file(self) -> None:
         path = filedialog.askopenfilename(
             title="Select music track",
             filetypes=[
@@ -195,6 +236,13 @@ class MallMemoryApp(tk.Tk):
         )
         if path:
             self._music_path.set(path)
+            self._refresh_music_count()
+
+    def _pick_music_folder(self) -> None:
+        path = filedialog.askdirectory(title="Select music folder")
+        if path:
+            self._music_path.set(path)
+            self._refresh_music_count()
 
     def _use_demo_music(self) -> None:
         path = bundled_demo_path()
@@ -208,6 +256,7 @@ class MallMemoryApp(tk.Tk):
             path = bundled_demo_path()
         if path.is_file():
             self._music_path.set(str(path))
+            self._refresh_music_count()
             self._status.set("Using built-in demo ambient track.")
 
     def _generate_demo_music(self, silent: bool = True) -> None:
@@ -229,6 +278,7 @@ class MallMemoryApp(tk.Tk):
     def _on_demo_ready(self, path: Path, silent: bool) -> None:
         self._busy = False
         self._music_path.set(str(path))
+        self._refresh_music_count()
         self._status.set(f"Demo music ready: {path.name}")
         if not silent:
             messagebox.showinfo("Demo music", f"Saved to:\n{path}")
@@ -259,6 +309,23 @@ class MallMemoryApp(tk.Tk):
         except (FileNotFoundError, ValueError) as exc:
             self._photo_count.set(str(exc))
 
+    def _refresh_music_count(self) -> None:
+        source = self._music_path.get().strip()
+        if not source:
+            self._music_count.set("")
+            return
+        path = Path(source)
+        try:
+            tracks = resolve_music_paths(path, sort=self._sort.get())
+            if path.is_dir():
+                self._music_count.set(
+                    f"{len(tracks)} tracks — plays in order, loops playlist if needed"
+                )
+            else:
+                self._music_count.set("1 track")
+        except (FileNotFoundError, ValueError) as exc:
+            self._music_count.set(str(exc))
+
     def _on_style_change(self, *_args) -> None:
         preset = PRESETS.get(self._style.get(), PRESETS["proper-people"])
         self._seconds.set(preset.seconds_per_image)
@@ -274,7 +341,12 @@ class MallMemoryApp(tk.Tk):
             messagebox.showwarning("Missing folder", "Choose a folder of photos.")
             return False
         if not self._music_path.get().strip():
-            messagebox.showwarning("Missing music", "Choose a music file.")
+            messagebox.showwarning("Missing music", "Choose a music file or folder.")
+            return False
+        try:
+            resolve_music_paths(Path(self._music_path.get().strip()), sort=self._sort.get())
+        except (FileNotFoundError, ValueError) as exc:
+            messagebox.showwarning("Invalid music", str(exc))
             return False
         if not self._output_path.get().strip():
             messagebox.showwarning("Missing output", "Choose where to save the video.")
@@ -288,6 +360,8 @@ class MallMemoryApp(tk.Tk):
         self._generate_btn.configure(state=tk.DISABLED)
         self._progress["value"] = 0
         self._status.set("Starting…")
+        self._clear_log()
+        log.info("Generate clicked")
 
         seconds = self._seconds.get() if self._use_custom_timing.get() else None
         crossfade = self._crossfade.get() if self._use_custom_timing.get() else None
@@ -305,6 +379,7 @@ class MallMemoryApp(tk.Tk):
                     on_progress=self._on_progress_thread,
                 )
             except Exception as exc:
+                log.exception("Export failed")
                 self.after(0, lambda: self._on_error(exc))
                 return
             self.after(0, lambda: self._on_success(out))
@@ -344,8 +419,15 @@ class MallMemoryApp(tk.Tk):
             subprocess.run(["xdg-open", str(target)], check=False)
 
 
-def run() -> None:
+def run(verbose: bool = False, log_file: Path | None = None) -> None:
     app = MallMemoryApp()
+    level = logging.DEBUG if verbose else logging.INFO
+    setup_logging(
+        level=level,
+        gui_append=lambda line: app.after(0, lambda: app._append_log(line)),
+        log_file=log_file,
+    )
+    log.info("Mall Memory Video v%s ready", __version__)
     app.mainloop()
 
 

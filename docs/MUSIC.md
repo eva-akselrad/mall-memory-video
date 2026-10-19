@@ -46,7 +46,7 @@ Pick one album-style bed and let it run; the app **loops** the track if your sli
 
 Start with **Urbex Utopy** or **Through glass** if you are unsure — they sit right in the Proper People documentary pocket.
 
-**In the app:** export or save the track as MP3/WAV, then choose it under **Music track** (or `--music` on the command line).
+**In the app:** point **Music** at a single file or a **folder** of MP3/WAV files. Tracks play **in filename order** through the whole slideshow; if the photos outlast the playlist, it starts again from the first track. CLI: `--music path\to\file.mp3` or `--music path\to\music-folder`.
 
 ---
 
