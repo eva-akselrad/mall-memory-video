@@ -1,0 +1,6 @@
+# Copy to your photos folder as order.txt (one filename per line).
+# Lines starting with # are ignored.
+
+first-slide.jpg
+second-slide.jpg
+third-slide.jpg

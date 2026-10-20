@@ -54,7 +54,33 @@ python -m mall_memory ^
 |------|---------|-------------|
 | `--style proper-people` | `proper-people` | Slow holds, longer crossfades |
 | `--style neon-mall` | | Slightly faster pacing, shorter crossfades |
-| `--sort name` / `date` | `name` | Order slides by filename or photo date |
+| `--sort name` / `date` / `file` | `name` | Order slides by filename, photo date, or `order.txt` |
+| `--order-file` | | Path to a custom order list (with `--sort file`) |
+
+### Slide order
+
+**Filename (`name`)** — alphabetical by file name. Rename with numeric prefixes if you want a manual sequence:
+
+`01-food-court.jpg`, `02-atrium.jpg`, …
+
+**Date (`date`)** — EXIF capture time when available, otherwise file modified time.
+
+**Custom list (`file`)** — put an **`order.txt`** in your photos folder (one filename per line):
+
+```text
+# optional comments with #
+NC_IMG_20261019_143131.jpg
+20261019171901614.jpg
+shot_03.jpg
+```
+
+In the UI, set **Order** to `file`. CLI:
+
+```bash
+python -m mall_memory -i photos --sort file -m music -o out.mp4
+```
+
+Any images not listed in `order.txt` are appended at the end, still alphabetically.
 | `--seconds-per-image` | preset | Override how long each photo stays on screen |
 | `--crossfade` | preset | Crossfade length between slides |
 | `--width` / `--height` | 1920×1080 | Export resolution |

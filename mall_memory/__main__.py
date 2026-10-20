@@ -47,9 +47,15 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--sort",
-        choices=("name", "date"),
+        choices=("name", "date", "file"),
         default="name",
-        help="Image order: filename or EXIF/mtime date",
+        help="Image order: filename, date, or file (order.txt in image folder)",
+    )
+    parser.add_argument(
+        "--order-file",
+        type=Path,
+        default=None,
+        help="Custom order list (one filename per line); used with --sort file",
     )
     parser.add_argument(
         "--width",
@@ -122,6 +128,7 @@ def main(argv: list[str] | None = None) -> int:
             args.output,
             style=args.style,
             sort=args.sort,
+            order_file=args.order_file,
             width=args.width,
             height=args.height,
             fps=args.fps,

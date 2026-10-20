@@ -59,6 +59,7 @@ def build_video(
     *,
     style: str = "proper-people",
     sort: str = "name",
+    order_file: Path | None = None,
     music_sort: str = "name",
     width: int = 1920,
     height: int = 1080,
@@ -92,7 +93,7 @@ def build_video(
     crossfade = crossfade_seconds if crossfade_seconds is not None else preset.crossfade_seconds
 
     progress("loading", 0.02)
-    image_paths = discover_images(images_dir, sort=sort)
+    image_paths = discover_images(images_dir, sort=sort, order_file=order_file)
     log.info(
         "Found %d photos (sort=%s, %.2fs each, %.2fs crossfade)",
         len(image_paths),
@@ -100,6 +101,11 @@ def build_video(
         duration,
         crossfade,
     )
+    if sort == "file":
+        preview = ", ".join(p.name for p in image_paths[:5])
+        if len(image_paths) > 5:
+            preview += ", …"
+        log.info("Slide order: %s", preview)
     clips: list[VideoClip] = []
     temp_dir = Path(tempfile.mkdtemp(prefix="mall-memory-slides-"))
     log.info("Rendering slides with ffmpeg (temp: %s)", temp_dir)

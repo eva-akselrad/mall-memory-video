@@ -134,10 +134,11 @@ class MallMemoryApp(tk.Tk):
         ttk.Combobox(
             opts,
             textvariable=self._sort,
-            values=("name", "date"),
+            values=("name", "date", "file"),
             state="readonly",
             width=10,
         ).grid(row=0, column=3, sticky=tk.W, padx=(8, 0))
+        self._sort.trace_add("write", lambda *_: self._refresh_photo_count())
 
         timing = ttk.Frame(card, style="Card.TFrame")
         timing.grid(row=7, column=0, columnspan=3, sticky=tk.EW, pady=(12, 0))
@@ -304,8 +305,12 @@ class MallMemoryApp(tk.Tk):
             self._photo_count.set("")
             return
         try:
-            count = len(discover_images(Path(folder), sort=self._sort.get()))
-            self._photo_count.set(f"{count} photos found")
+            sort = self._sort.get()
+            count = len(discover_images(Path(folder), sort=sort))
+            if sort == "file":
+                self._photo_count.set(f"{count} photos (order from order.txt)")
+            else:
+                self._photo_count.set(f"{count} photos found")
         except (FileNotFoundError, ValueError) as exc:
             self._photo_count.set(str(exc))
 
@@ -374,6 +379,7 @@ class MallMemoryApp(tk.Tk):
                     Path(self._output_path.get()),
                     style=self._style.get(),
                     sort=self._sort.get(),
+                    order_file=None,
                     seconds_per_image=seconds,
                     crossfade_seconds=crossfade,
                     on_progress=self._on_progress_thread,
