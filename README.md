@@ -1,6 +1,6 @@
 # Mall Memory Video
 
-Turn a folder of old mall photos into a **slow, cinematic slideshow with music** — pacing and color grade inspired by documentary urban-exploration channels like [The Proper People](https://www.youtube.com/@TheProperPeople) (long holds, gentle Ken Burns moves, soft crossfades, moody grade).
+Turn a folder of mall photos into a **slideshow with music** — your images are used **as-is** (no zoom, shake, or color grading). Style presets only control **timing** and **crossfades**, in the spirit of slow documentary mall videos like [The Proper People](https://www.youtube.com/@TheProperPeople).
 
 You supply the **photos** and a **music file** you have rights to use (ambient / instrumental works best).
 
@@ -52,8 +52,8 @@ python -m mall_memory ^
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--style proper-people` | `proper-people` | Slow holds, long crossfades, cool desaturated grade |
-| `--style neon-mall` | | Slightly faster, a bit more saturation |
+| `--style proper-people` | `proper-people` | Slow holds, longer crossfades |
+| `--style neon-mall` | | Slightly faster pacing, shorter crossfades |
 | `--sort name` / `date` | `name` | Order slides by filename or photo date |
 | `--seconds-per-image` | preset | Override how long each photo stays on screen |
 | `--crossfade` | preset | Crossfade length between slides |
@@ -79,10 +79,9 @@ In the UI: **Use demo music** (or **Generate demo track** if the file is missing
 ## What it does
 
 1. Loads every image in your folder (jpg, png, webp, …)
-2. Applies a subtle **Ken Burns** pan/zoom on each shot
-3. **Crossfades** between photos
-4. Adds a light **film grade** (desaturation, vignette, grain)
-5. Mixes your **music** (one file or a **folder** of tracks played in order) with fade-in/out; repeats the playlist if the slideshow runs longer
+2. **Letterboxes** each photo to the export size (no crop, no filters)
+3. **Crossfades** between photos (timing preset)
+4. Mixes your **music** (one file or a **folder** of tracks played in order) with fade-in/out; repeats the playlist if the slideshow runs longer
 
 ## License
 

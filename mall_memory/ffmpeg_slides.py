@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import random
 import subprocess
 from pathlib import Path
 
@@ -17,24 +16,11 @@ def render_slide_video(
     fps: int,
     width: int,
     height: int,
-    zoom_end: float,
-    seed: int,
 ) -> None:
-    """Fast Ken Burns segment via ffmpeg zoompan (much faster than Python per-frame)."""
-    frames = max(1, int(round(duration * fps)))
-    z_step = (zoom_end - 1.0) / max(1, frames - 1)
-    rng = random.Random(seed)
-    pan_px = int(rng.uniform(-30, 30))
-
-    # Cover-scale, then zoompan from 1.0 → zoom_end with slight horizontal pan.
+    """Static hold — scale to fit frame, no zoom, color, or motion."""
     vf = (
-        f"scale={width}:{height}:force_original_aspect_ratio=increase,"
-        f"crop={width}:{height},"
-        f"zoompan=z='min(zoom+{z_step:.6f},{zoom_end})':"
-        f"x='iw/2-(iw/zoom/2)+{pan_px}*on/{frames}':"
-        f"y='ih/2-(ih/zoom/2)':"
-        f"d={frames}:s={width}x{height}:fps={fps},"
-        f"eq=brightness=0.03:saturation=0.85"
+        f"scale={width}:{height}:force_original_aspect_ratio=decrease,"
+        f"pad={width}:{height}:(ow-iw)/2:(oh-ih)/2:black"
     )
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -52,6 +38,8 @@ def render_slide_video(
         vf,
         "-t",
         f"{duration:.3f}",
+        "-r",
+        str(fps),
         "-c:v",
         "libx264",
         "-preset",

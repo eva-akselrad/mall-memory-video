@@ -8,7 +8,6 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 
-import numpy as np
 from proglog import ProgressBarLogger
 from moviepy import (
     AudioFileClip,
@@ -20,13 +19,7 @@ from moviepy import (
 from moviepy.audio.fx import AudioFadeIn, AudioFadeOut
 from moviepy.video.fx import CrossFadeIn
 
-from mall_memory.effects import (
-    PRESETS,
-    KenBurnsSlide,
-    StylePreset,
-    apply_grade,
-    load_image_rgb,
-)
+from mall_memory.effects import PRESETS, StylePreset, fit_image_to_frame, load_image_rgb
 from mall_memory.ffmpeg_slides import render_slide_video
 from mall_memory.images import discover_images
 from mall_memory.log_config import get_logger
@@ -115,7 +108,6 @@ def build_video(
         for index, path in enumerate(image_paths):
             log.info("Slide %d/%d: %s", index + 1, len(image_paths), path.name)
             progress("slides", 0.05 + 0.55 * (index / max(1, len(image_paths))))
-            seed = index * 131 + hash(path.name) % 10_000
             segment = temp_dir / f"slide_{index:04d}.mp4"
             try:
                 render_slide_video(
@@ -125,15 +117,11 @@ def build_video(
                     fps=fps,
                     width=width,
                     height=height,
-                    zoom_end=preset.zoom_end,
-                    seed=seed,
                 )
                 clip = VideoFileClip(str(segment))
             except (subprocess.CalledProcessError, OSError) as exc:
                 log.warning("ffmpeg failed for %s (%s), using Python renderer", path.name, exc)
-                clip = _python_slide_clip(
-                    path, index, duration, fps, width, height, preset, seed
-                )
+                clip = _python_slide_clip(path, duration, fps, width, height)
             if index > 0 and crossfade > 0:
                 clip = clip.with_effects([CrossFadeIn(crossfade)])
             clips.append(clip)
@@ -199,32 +187,15 @@ def build_video(
 
 def _python_slide_clip(
     path: Path,
-    index: int,
     duration: float,
     fps: int,
     width: int,
     height: int,
-    preset: StylePreset,
-    seed: int,
 ) -> VideoClip:
-    base = load_image_rgb(path)
-    slide = KenBurnsSlide.from_image(
-        base, duration, width, height, preset.zoom_end, seed
-    )
+    frame = fit_image_to_frame(load_image_rgb(path), width, height)
 
-    def make_frame(t, kb=slide, idx=index):
-        frame = kb.frame_at(t)
-        frame_index = int(t * fps) + idx * 10_000
-        graded = apply_grade(
-            frame,
-            preset.saturation,
-            preset.warmth,
-            preset.shadow_lift,
-            preset.vignette,
-            preset.grain,
-            frame_index,
-        )
-        return (np.clip(graded, 0.0, 1.0) * 255).astype(np.uint8)
+    def make_frame(_t, still=frame):
+        return still
 
     return VideoClip(make_frame, duration=duration).with_fps(fps)
 
